@@ -11,7 +11,6 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import os
-import textwrap
 import random
 
 # ---------------------------------------------------------------------------
@@ -363,30 +362,30 @@ if uploaded_file is not None:
 
             info = VITAMIN_INFO[result]
 
-        # Display Results
-        st.markdown(textwrap.dedent(f"""
-        <div class="result-card">
-            <div class="result-icon">{info['icon']}</div>
-            <div style="font-size: 0.85rem; color: #94a1b2; text-transform: uppercase; letter-spacing: 2px;">Predicted Nutrient</div>
-            <div class="result-vitamin" style="color: {info['color']};">{result}</div>
-            <div class="result-confidence">Confidence: {confidence}%</div>
-
-            <div class="info-grid">
-                <div class="info-item full-width">
-                    <div class="info-label">Health Benefits</div>
-                    <div class="info-value">{info['benefits']}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Food Sources</div>
-                    <div class="info-value">{info['sources']}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Daily Recommended Value</div>
-                    <div class="info-value">{info['daily_value']}</div>
-                </div>
-            </div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        # Display Results - Left aligned string to avoid markdown block parsing
+        html_content = f"""
+<div class="result-card">
+<div class="result-icon">{info['icon']}</div>
+<div style="font-size: 0.85rem; color: #94a1b2; text-transform: uppercase; letter-spacing: 2px;">Predicted Nutrient</div>
+<div class="result-vitamin" style="color: {info['color']};">{result}</div>
+<div class="result-confidence">Confidence: {confidence:.2f}%</div>
+<div class="info-grid">
+<div class="info-item full-width">
+<div class="info-label">Health Benefits</div>
+<div class="info-value">{info['benefits']}</div>
+</div>
+<div class="info-item">
+<div class="info-label">Food Sources</div>
+<div class="info-value">{info['sources']}</div>
+</div>
+<div class="info-item">
+<div class="info-label">Daily Recommended Value</div>
+<div class="info-value">{info['daily_value']}</div>
+</div>
+</div>
+</div>
+"""
+        st.markdown(html_content, unsafe_allow_html=True)
 
         if demo_mode:
             st.info(
