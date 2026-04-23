@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitamin Detection</title>
+    <style>
+   
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url("file:///C:/Users/hp/Desktop/23.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0;
+            padding: 20px;
+            animation-name: FadeIn;
+            animation-duration: 5s;
+            animation-fill-mode: forwards;
+        }
+          @keyframes fadeIn {
+        from {
+            opacity: 0; /* Start position of the animation */
+        }
+        to {
+            opacity: 1; /* End position of the animation */
+        }
+          #vitamin-detection-note {
+            /* Existing styles */
+            animation-name: fadeIn; /* Name of the animation */
+            animation-duration: 5s; /* Duration of the animation */
+        }
+    }
+    #contact {
+    margin-top: 100px; /* Push down the contact section */
+    background-color: rgba(0, 0, 0, 0.7); /* Set transparent black background */
+    color: #fff; /* Set text color to white */
+    padding: 20px; /* Add padding for better visibility */
+}
+#vitamin-detection-note {
+    background-color: rgba(255, 255, 255, 0.7); /* Transparent white background */
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+}
+
+
+     h1 {
+    color: #fff; 
+    text-align: left;
+    animation-name: slideInLeft;
+    animation-duration: 5s; 
+    background-color: rgba(0, 0, 0, 0.7); /* Set transparent black background */
+    padding: 20px; /* Add padding for better visibility */
+    display: inline-block; /* Change the display property to inline-block */
+}
+
+
+
+@keyframes slideInLeft {
+    from {
+        margin-left: 100%; /* Start position of the animation */
+        opacity: 0;
+    }
+
+    to {
+        margin-left: 0; /* End position of the animation */
+        opacity: 1;
+    }
+}
+
+
+
+       form {
+    text-align: left; 
+    max-width: 400px;
+    margin: 90px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.7); /* Set transparent white background */
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-left: 20px; /* Add this line to shift the whole form towards the left */
+    animation-name: slideInLeft; /* Name of the animation */
+    animation-duration: 5s; /* Duration of the animation */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0; /* Start position of the animation */
+    }
+    to {
+        opacity: 1; /* End position of the animation */
+    }
+}
+
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold; 
+        }
+
+        input[type="file"] {
+            display: block;
+            margin-bottom: 20px;
+            text-align: left; 
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left; 
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Welcome to the Vitamin Detection Website</h1>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <label for="imageUpload">Upload an image:</label>
+        <input type="file" id="imageUpload" name="imageUpload" accept="image/*" required>
+        <button type="submit">Predict</button>
+    </form>
+    <!-- Other existing content -->
+
+    <!-- Contact Us Section -->
+     <!-- Contact Us Section -->
+<section id="contact">
+    <h2>Contact Us</h2>
+    <div class="contact-info">
+        <p><strong>Email:</strong> info@vitamindetection.com</p>
+        <p><strong>Phone:</strong> 123-456-7890</p>
+        <p><strong>Address:</strong> 123 Vitamin St, City, Country</p>
+    </div>
+</section>
+<div id="vitamin-detection-note" style="position: fixed; top: 50%; right: 20px; transform: translateY(-50%); background-color: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); max-width: 300px;">
+    <h3>Vitamin Detection Model</h3>
+    <p>The vitamin detection model utilizes advanced machine learning techniques tailored specifically for identifying and classifying different types of vitamins in images. It leverages deep learning algorithms with customized neural network architectures to accurately recognize and categorize vitamins within the input images.</p>
+</div>
+
+    </section>
+</body>
+
+
+</html>
