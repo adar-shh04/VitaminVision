@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Model files (too large for GitHub — use Git LFS or download separately)
+*.h5
+*.hdf5
+*.pb
+*.tflite
+saved_model/
+
+# Uploads (temporary)
+uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Distribution
+dist/
+build/
+*.egg-info/

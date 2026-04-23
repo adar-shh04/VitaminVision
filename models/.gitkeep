@@ -1,0 +1,4 @@
+# This file keeps the models/ directory tracked by Git.
+# Place your trained model file (my_model.h5) in this directory.
+#
+# To retrain the model, see notebooks/Projectvv.ipynb

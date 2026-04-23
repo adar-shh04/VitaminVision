@@ -1,90 +1,139 @@
-# Vitamin Vision
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/TensorFlow-2.15+-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" />
+  <img src="https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
+  <img src="https://img.shields.io/badge/Flask-3.0+-000000?style=for-the-badge&logo=flask&logoColor=white" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
 
-Vitamin Vision is a **proof-of-concept full-stack machine learning application** that explores the feasibility of detecting vitamin-related information from food images using deep learning and computer vision techniques.
+<h1 align="center">🔬 VitaminVision</h1>
+<p align="center">
+  <strong>AI-Powered Nutrient Detection from Food Images</strong><br/>
+  Upload a photo of any food → get instant vitamin predictions with confidence scores
+</p>
 
-This project was developed as part of a **SmartInternz Summer Project Internship** and focuses on end-to-end system design rather than production-grade medical accuracy.
+---
 
+## 🚀 Live Demo
 
-## 🚀 Problem Statement
+👉 **[vitaminvision.streamlit.app](https://vitaminvision.streamlit.app)**
 
-Tracking vitamin intake is difficult for most individuals, and existing diet-tracking tools often focus on calories rather than micronutrients.  
-Vitamin Vision explores whether **computer vision models** can be used to analyze food images and provide vitamin-related insights in a simplified, accessible way.
+> The app runs in **demo mode** when the model file is not present. Place a trained model at `models/my_model.h5` for real predictions.
 
+---
 
-## 🧠 Project Overview
+## 📋 Problem Statement
 
-- Users upload an image of food through a web interface
-- A deep learning model processes the image
-- The system predicts vitamin-related categories based on learned visual patterns
-- Results are displayed through a Flask-based web application
+Tracking vitamin intake is difficult for most people. Existing diet-tracking tools focus on calories rather than micronutrients. VitaminVision explores whether **computer vision** can be used to analyze food images and provide vitamin-related insights.
 
-⚠️ Note:  
-Vitamins are chemical properties and cannot be directly inferred from images.  
-This project is intended as a **learning-oriented prototype**, not a medical or nutrition-grade system.
+> ⚠️ **Disclaimer:** Vitamins are chemical properties and cannot be directly inferred from images alone. This project is a **learning-oriented prototype**, not a medical-grade system.
 
+---
+
+## 🧠 How It Works
+
+1. **Upload** a food image (JPG, PNG, WEBP)
+2. **AI Analysis** — VGG19-based CNN processes the image
+3. **Results** — Dominant vitamin prediction with confidence, benefits, and food sources
+
+---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- HTML
-- CSS
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Streamlit (deployed) / HTML + CSS (Flask local) |
+| **Backend** | Python, Flask |
+| **ML Model** | TensorFlow, Keras, VGG19 (Transfer Learning) |
+| **Deployment** | Streamlit Cloud |
 
-### Backend
-- Python
-- Flask
+---
 
-### Machine Learning
-- TensorFlow
-- Keras
-- Convolutional Neural Networks (CNN)
-- Transfer Learning (VGG19)
+## 📁 Project Structure
 
-### Tools
-- Git
-- GitHub
+```
+VitaminVision/
+├── streamlit_app.py          # Streamlit app (for deployment)
+├── app.py                    # Flask app (for local development)
+├── requirements.txt          # Python dependencies
+├── .gitignore
+├── README.md
+│
+├── models/                   # Place my_model.h5 here
+├── templates/                # Flask HTML templates
+│   ├── index.html
+│   └── predict.html
+├── static/css/               # Flask CSS
+│   └── style.css
+├── notebooks/                # Training notebook
+│   └── Projectvv.ipynb
+├── docs/                     # Documentation (consolidated)
+│   ├── planning/
+│   ├── data/
+│   ├── model/
+│   ├── optimization/
+│   └── reports/
+├── assets/demo/              # Screenshots and demo video
+│
+│  ── Academic Project Phases (certification) ──
+├── 1. Project Initialization and Planning Phase/
+├── 2. Data Collection and Preprocessing Phase/
+├── 3. Model Development Phase/
+├── 4. Model Optimization and Tuning Phase/
+├── 5. Project Executable Files/
+└── 6. Documentation and demonstration/
+```
 
+---
 
-## ⚙️ Model Details
+## ▶️ Quick Start
 
-- Compared **VGG16** and **VGG19** CNN architectures
-- Used **VGG19 with ImageNet pre-trained weights**
-- Applied data preprocessing and augmentation:
-  - Image resizing
-  - Normalization
-  - Rotation and flipping
-- Implemented regularization techniques and early stopping
-- Achieved **moderate accuracy**, constrained by dataset quality and problem framing
+### Streamlit (Recommended)
+```bash
+git clone https://github.com/ADARSH-SINGH-1/VitaminVision.git
+cd VitaminVision
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
 
+### Flask (Local Development)
+```bash
+pip install flask tensorflow numpy Pillow
+python app.py
+# Visit http://127.0.0.1:5000
+```
 
-## 🧩 System Architecture (High-Level)
+---
 
-1. User uploads food image
-2. Image is preprocessed
-3. CNN model performs classification
-4. Prediction result is returned via Flask backend
-5. Output is displayed on the web interface
+## 🧪 Model Details
 
+| Property | Value |
+|----------|-------|
+| Architecture | VGG19 (Transfer Learning) |
+| Pre-trained Weights | ImageNet |
+| Input Size | 224 × 224 × 3 |
+| Output Classes | Vitamin A, B, C, D, E |
+| Preprocessing | Resize, Normalize (0–1), Augmentation |
+| Regularization | Dropout, Early Stopping |
 
-## ▶️ How to Run Locally
+---
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/ADARSH-SINGH-1/VitaminVision.git
-   cd VitaminVision
-   pip install -r requirements.txt
-   python app.py
-   http://127.0.0.1:5000
+## 📊 Limitations & Learnings
 
-## Limitations & Learnings
-
-- Vitamin content is not visually deterministic
+- Vitamin content is **not visually deterministic** — this is a classification proxy
 - Dataset size and label quality limited model performance
 - Similar-looking foods caused misclassification
--The project highlights the limitations of computer vision for nutritional inference
+- The project demonstrates: ML problem framing, dataset bias, model evaluation beyond accuracy
 
-These challenges provided valuable insights into:
+---
 
-- ML problem framing
-- Dataset bias
-- Model evaluation beyond raw accuracy
+## 🙏 Acknowledgments
 
+- Built as part of the **SmartInternz Summer Project Internship**
+- VIT University, Vellore, India
+
+---
+
+<p align="center">
+  Built with ❤️ and Deep Learning
+</p>
