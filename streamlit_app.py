@@ -15,7 +15,7 @@ import random
 
 # ---------------------------------------------------------------------------
 # Page Configuration
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------                               
 st.set_page_config(
     page_title="VitaminVision AI",
     page_icon="🔬",
@@ -385,7 +385,7 @@ if uploaded_file is not None:
                 </div>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """.strip(), unsafe_allow_html=True)
 
         if demo_mode:
             st.info(
