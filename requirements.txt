@@ -1,0 +1,6 @@
+tensorflow
+streamlit
+numpy
+Pillow
+flask
+werkzeug
