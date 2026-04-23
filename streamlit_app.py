@@ -11,6 +11,7 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import os
+import textwrap
 import random
 
 # ---------------------------------------------------------------------------
@@ -363,7 +364,7 @@ if uploaded_file is not None:
             info = VITAMIN_INFO[result]
 
         # Display Results
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="result-card">
             <div class="result-icon">{info['icon']}</div>
             <div style="font-size: 0.85rem; color: #94a1b2; text-transform: uppercase; letter-spacing: 2px;">Predicted Nutrient</div>
@@ -385,7 +386,7 @@ if uploaded_file is not None:
                 </div>
             </div>
         </div>
-        """.strip(), unsafe_allow_html=True)
+        """).strip(), unsafe_allow_html=True)
 
         if demo_mode:
             st.info(
