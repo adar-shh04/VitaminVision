@@ -251,6 +251,7 @@ def load_model():
             import tensorflow as tf
             return tf.keras.models.load_model(MODEL_PATH)
         except Exception as e:
+            print(f"EXCEPTION DURING MODEL LOAD: {e}")
             st.error(f"Error loading model: {e}")
             return None
     return None
