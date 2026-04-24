@@ -90,7 +90,7 @@ VitaminVision/
 
 ### Streamlit (Recommended)
 ```bash
-git clone https://github.com/ADARSH-SINGH-1/VitaminVision.git
+git clone https://github.com/adar-shh04/VitaminVision.git
 cd VitaminVision
 pip install -r requirements.txt
 streamlit run streamlit_app.py
