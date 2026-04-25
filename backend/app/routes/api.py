@@ -2,10 +2,9 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from typing import List
 from app.schemas.api_models import HealthResponse, PredictionResponse, HistoryResponse, PredictionHistoryItem
 from app.services.ml_service import ml_service
-from app.db.database import get_database
-from app.models.domain import PredictionRecord
-from PIL import Image
-import io
+from app.services.prediction_service import prediction_service
+from app.db.database import get_db
+from motor.motor_asyncio import AsyncIOMotorDatabase
 import logging
 
 router = APIRouter()
@@ -19,45 +18,21 @@ async def health_check():
     )
 
 @router.post("/predict", response_model=PredictionResponse)
-async def predict_image(file: UploadFile = File(...)):
+async def predict_image(
+    file: UploadFile = File(...),
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File provided is not an image.")
 
-    try:
-        content = await file.read()
-        image = Image.open(io.BytesIO(content)).convert("RGB")
-    except Exception as e:
-        logger.error(f"Image processing error: {e}")
-        raise HTTPException(status_code=400, detail="Invalid image file.")
-
-    try:
-        # Run inference
-        result = ml_service.predict(image)
-        
-        # Save to database
-        db = get_database()
-        record = PredictionRecord(
-            filename=file.filename,
-            predicted_vitamin=result["predicted_vitamin"],
-            confidence=result["confidence"]
-        )
-        
-        # Insert into MongoDB collection
-        collection = db.predictions
-        new_record = await collection.insert_one(record.model_dump(by_alias=True, exclude=["id"]))
-        
-    except Exception as e:
-        logger.error(f"Prediction or database error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error during prediction.")
-
+    # Business logic delegated entirely to Prediction Service
+    result = await prediction_service.process(file, db)
     return PredictionResponse(**result)
 
 @router.get("/history", response_model=HistoryResponse)
-async def get_history():
+async def get_history(db: AsyncIOMotorDatabase = Depends(get_db)):
     try:
-        db = get_database()
         collection = db.predictions
-        
         # Get latest 50 predictions, sorted by newest first
         cursor = collection.find({}).sort("created_at", -1).limit(50)
         
@@ -75,5 +50,5 @@ async def get_history():
             
         return HistoryResponse(predictions=predictions)
     except Exception as e:
-        logger.error(f"Database read error: {e}")
+        logger.error(f"Database read error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch history.")

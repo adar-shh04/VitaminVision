@@ -2,6 +2,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+class PredictRequest(BaseModel):
+    filename: str
+    content_type: str
+    
 class VitaminInfo(BaseModel):
     icon: str
     color: str

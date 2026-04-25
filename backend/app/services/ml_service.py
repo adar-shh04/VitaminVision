@@ -3,11 +3,14 @@ import numpy as np
 from PIL import Image
 import random
 import logging
+from app.db.database import settings
 
 logger = logging.getLogger(__name__)
 
-# Go up from backend/app/services to project root, then to models
-MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "models", "my_model.h5"))
+# Use relative path resolution if the env path is relative to the backend
+_base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODEL_PATH = os.path.normpath(os.path.join(_base_dir, settings.MODEL_PATH))
+
 IMG_SIZE = (224, 224)
 LABELS = ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D", "Vitamin E"]
 
@@ -15,35 +18,35 @@ VITAMIN_INFO = {
     "Vitamin A": {
         "icon": "🥕",
         "color": "#FF6B35",
-        "benefits": "Essential for healthy vision, immune function, and skin cell renewal. Acts as an antioxidant protecting against cellular damage.",
+        "benefits": "Essential for healthy vision, immune function, and skin cell renewal.",
         "sources": "Carrots, sweet potatoes, spinach, kale, liver, eggs",
         "daily_value": "900 µg RAE (men) / 700 µg RAE (women)",
     },
     "Vitamin B": {
         "icon": "🌾",
         "color": "#F7C948",
-        "benefits": "Supports energy metabolism, nervous system function, and red blood cell production. Critical for brain health.",
+        "benefits": "Supports energy metabolism, nervous system function, and red blood cell production.",
         "sources": "Whole grains, eggs, dairy products, legumes, leafy greens",
         "daily_value": "Varies by subtype (B1–B12)",
     },
     "Vitamin C": {
         "icon": "🍊",
         "color": "#FF9F1C",
-        "benefits": "Powerful antioxidant that boosts immune defense, promotes collagen synthesis, and enhances iron absorption.",
+        "benefits": "Powerful antioxidant that boosts immune defense and promotes collagen synthesis.",
         "sources": "Citrus fruits, strawberries, bell peppers, broccoli, tomatoes",
         "daily_value": "90 mg (men) / 75 mg (women)",
     },
     "Vitamin D": {
         "icon": "☀️",
         "color": "#2EC4B6",
-        "benefits": "Regulates calcium and phosphorus absorption for bone health. Supports immune modulation and mood regulation.",
+        "benefits": "Regulates calcium and phosphorus absorption for bone health.",
         "sources": "Sunlight exposure, fatty fish, fortified milk, egg yolks, mushrooms",
         "daily_value": "15 µg (600 IU)",
     },
     "Vitamin E": {
         "icon": "🥜",
         "color": "#E71D36",
-        "benefits": "Fat-soluble antioxidant that protects cell membranes from oxidative stress. Supports skin health and immune function.",
+        "benefits": "Fat-soluble antioxidant that protects cell membranes from oxidative stress.",
         "sources": "Almonds, sunflower seeds, spinach, avocados, vegetable oils",
         "daily_value": "15 mg",
     },
@@ -61,9 +64,9 @@ class MLService:
                 import tensorflow as tf
                 self.model = tf.keras.models.load_model(MODEL_PATH)
                 self.is_demo_mode = False
-                logger.info("Successfully loaded ML model.")
+                logger.info("Successfully loaded ML model.", extra={"model_path": MODEL_PATH})
             except Exception as e:
-                logger.error(f"Error loading model: {e}")
+                logger.error(f"Error loading model: {e}", exc_info=True)
                 self.is_demo_mode = True
         else:
             logger.warning(f"Model not found at {MODEL_PATH}. Running in Demo Mode.")
@@ -71,6 +74,7 @@ class MLService:
 
     def predict(self, image: Image.Image):
         """Run actual model prediction or simulated prediction."""
+        logger.info("Starting ML inference...")
         if not self.is_demo_mode and self.model is not None:
             img = image.resize(IMG_SIZE)
             arr = np.array(img, dtype="float32") / 255.0
@@ -85,6 +89,8 @@ class MLService:
             seed = int(np.sum(arr)) % len(LABELS)
             result_label = LABELS[seed]
             confidence = round(random.uniform(78.0, 97.5), 1)
+
+        logger.info("ML inference complete", extra={"predicted_vitamin": result_label, "confidence": confidence})
 
         return {
             "predicted_vitamin": result_label,

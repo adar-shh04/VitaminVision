@@ -8,6 +8,7 @@ load_dotenv()
 class Settings(BaseSettings):
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "vitamin_vision")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", "../models/my_model.h5")
 
 settings = Settings()
 
@@ -25,5 +26,6 @@ async def close_mongo_connection():
         db.client.close()
         print("Closed MongoDB connection.")
 
-def get_database():
+async def get_db():
+    """Dependency injection for FastAPI routes."""
     return db.client[settings.DATABASE_NAME]
