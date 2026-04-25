@@ -1,17 +1,14 @@
 """
-VitaminVision — Streamlit Application
+VitaminVision — Streamlit Frontend Client
 AI-powered nutrient detection from food images.
-
-Supports two modes:
-  - LIVE MODE:  Uses a trained Keras model (models/my_model.h5)
-  - DEMO MODE:  Simulates predictions when the model file is unavailable
+Communicates with the FastAPI Backend.
 """
 
 import streamlit as st
-import numpy as np
 from PIL import Image
-import os
-import random
+import requests
+import io
+import datetime
 
 # ---------------------------------------------------------------------------
 # Page Configuration
@@ -26,47 +23,7 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "my_model.h5")
-IMG_SIZE = (224, 224)
-LABELS = ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D", "Vitamin E"]
-
-VITAMIN_INFO = {
-    "Vitamin A": {
-        "icon": "🥕",
-        "color": "#FF6B35",
-        "benefits": "Essential for healthy vision, immune function, and skin cell renewal. Acts as an antioxidant protecting against cellular damage.",
-        "sources": "Carrots, sweet potatoes, spinach, kale, liver, eggs",
-        "daily_value": "900 µg RAE (men) / 700 µg RAE (women)",
-    },
-    "Vitamin B": {
-        "icon": "🌾",
-        "color": "#F7C948",
-        "benefits": "Supports energy metabolism, nervous system function, and red blood cell production. Critical for brain health.",
-        "sources": "Whole grains, eggs, dairy products, legumes, leafy greens",
-        "daily_value": "Varies by subtype (B1–B12)",
-    },
-    "Vitamin C": {
-        "icon": "🍊",
-        "color": "#FF9F1C",
-        "benefits": "Powerful antioxidant that boosts immune defense, promotes collagen synthesis, and enhances iron absorption.",
-        "sources": "Citrus fruits, strawberries, bell peppers, broccoli, tomatoes",
-        "daily_value": "90 mg (men) / 75 mg (women)",
-    },
-    "Vitamin D": {
-        "icon": "☀️",
-        "color": "#2EC4B6",
-        "benefits": "Regulates calcium and phosphorus absorption for bone health. Supports immune modulation and mood regulation.",
-        "sources": "Sunlight exposure, fatty fish, fortified milk, egg yolks, mushrooms",
-        "daily_value": "15 µg (600 IU)",
-    },
-    "Vitamin E": {
-        "icon": "🥜",
-        "color": "#E71D36",
-        "benefits": "Fat-soluble antioxidant that protects cell membranes from oxidative stress. Supports skin health and immune function.",
-        "sources": "Almonds, sunflower seeds, spinach, avocados, vegetable oils",
-        "daily_value": "15 mg",
-    },
-}
+API_BASE_URL = "http://localhost:8000/api/v1"
 
 # ---------------------------------------------------------------------------
 # Custom CSS
@@ -241,42 +198,28 @@ st.markdown("""
 
 
 # ---------------------------------------------------------------------------
-# Model Loading
+# API Functions
 # ---------------------------------------------------------------------------
-@st.cache_resource
-def load_model():
-    """Load the Keras model. Returns None if not found."""
-    if os.path.exists(MODEL_PATH):
-        try:
-            import tensorflow as tf
-            return tf.keras.models.load_model(MODEL_PATH)
-        except Exception as e:
-            print(f"EXCEPTION DURING MODEL LOAD: {e}")
-            st.error(f"Error loading model: {e}")
-            return None
+@st.cache_data(ttl=30)
+def check_backend_health():
+    """Check if the backend is running and model is loaded."""
+    try:
+        response = requests.get(f"{API_BASE_URL}/health", timeout=3)
+        if response.status_code == 200:
+            return response.json()
+    except Exception:
+        return None
     return None
 
-
-def predict_live(image, model):
-    """Run actual model prediction."""
-    img = image.resize(IMG_SIZE)
-    arr = np.array(img, dtype="float32") / 255.0
-    arr = np.expand_dims(arr, axis=0)
-    predictions = model.predict(arr)
-    idx = int(np.argmax(predictions, axis=1)[0])
-    confidence = float(np.max(predictions) * 100)
-    return LABELS[idx], confidence
-
-
-def predict_demo(image):
-    """Simulate a prediction for demonstration purposes."""
-    # Use image pixel statistics to generate a deterministic-looking result
-    arr = np.array(image.resize((64, 64)))
-    seed = int(np.sum(arr)) % len(LABELS)
-    label = LABELS[seed]
-    confidence = round(random.uniform(78.0, 97.5), 1)
-    return label, confidence
-
+def fetch_history():
+    """Fetch prediction history from backend."""
+    try:
+        response = requests.get(f"{API_BASE_URL}/history", timeout=5)
+        if response.status_code == 200:
+            return response.json().get("predictions", [])
+    except Exception:
+        return []
+    return []
 
 # ---------------------------------------------------------------------------
 # Sidebar
@@ -285,17 +228,22 @@ with st.sidebar:
     st.markdown("## 🔬 VitaminVision")
     st.markdown("---")
 
-    model = load_model()
-    if model is not None:
-        st.success("✅ Model loaded")
-        demo_mode = False
+    health_status = check_backend_health()
+    if health_status:
+        st.success("✅ Backend Online")
+        if health_status.get("model_loaded"):
+            st.info("🧠 Model Loaded")
+            demo_mode = False
+        else:
+            st.warning("⚠️ Demo Mode")
+            st.caption("Model not found on backend.")
+            demo_mode = True
+        backend_online = True
     else:
-        st.warning("⚠️ Model not found")
-        st.caption(
-            "Running in **demo mode**. Place `my_model.h5` in the "
-            "`models/` directory to enable real predictions."
-        )
-        demo_mode = True
+        st.error("❌ Backend Offline")
+        st.caption("Please ensure the FastAPI backend is running on port 8000.")
+        backend_online = False
+        demo_mode = False
 
     st.markdown("---")
     st.markdown("### About")
@@ -304,7 +252,7 @@ with st.sidebar:
         "to classify food images by their dominant vitamin profile."
     )
     st.markdown(
-        "**Tech Stack:** TensorFlow, Keras, Streamlit, Python"
+        "**Tech Stack:** FastAPI, MongoDB, Streamlit, Keras"
     )
     st.markdown("---")
     st.caption("Built with ❤️ at VIT University")
@@ -330,40 +278,45 @@ if demo_mode:
 
 st.markdown("---")
 
-# Upload Section
-st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-st.markdown("### 📸 Upload Food Image")
+tab1, tab2 = st.tabs(["🔍 Predict", "📚 History"])
 
-uploaded_file = st.file_uploader(
-    "Choose an image",
-    type=["jpg", "jpeg", "png", "webp", "bmp"],
-    help="Supported formats: JPG, PNG, WEBP, BMP — Max 200 MB",
-    label_visibility="collapsed",
-)
+with tab1:
+    # Upload Section
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 📸 Upload Food Image")
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("RGB")
+    uploaded_file = st.file_uploader(
+        "Choose an image",
+        type=["jpg", "jpeg", "png", "webp", "bmp"],
+        help="Supported formats: JPG, PNG, WEBP, BMP — Max 200 MB",
+        label_visibility="collapsed",
+    )
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image(image, caption=uploaded_file.name, use_container_width=True)
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
 
-    analyze_btn = st.button("🔍 Analyze Nutrients", use_container_width=True, type="primary")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(image, caption=uploaded_file.name, use_container_width=True)
 
-    if analyze_btn:
-        with st.spinner("🧠 Running neural network analysis..."):
-            import time
-            time.sleep(1.5)  # Brief pause for UX
+        analyze_btn = st.button("🔍 Analyze Nutrients", use_container_width=True, type="primary", disabled=not backend_online)
 
-            if demo_mode:
-                result, confidence = predict_demo(image)
-            else:
-                result, confidence = predict_live(image, model)
+        if analyze_btn:
+            with st.spinner("🧠 Running neural network analysis..."):
+                try:
+                    # Send image to backend
+                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                    response = requests.post(f"{API_BASE_URL}/predict", files=files)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        result = data["predicted_vitamin"]
+                        confidence = data["confidence"]
+                        info = data["info"]
+                        is_demo = data["is_demo_mode"]
 
-            info = VITAMIN_INFO[result]
-
-        # Display Results - Left aligned string to avoid markdown block parsing
-        html_content = f"""
+                        # Display Results
+                        html_content = f"""
 <div class="result-card">
 <div class="result-icon">{info['icon']}</div>
 <div style="font-size: 0.85rem; color: #94a1b2; text-transform: uppercase; letter-spacing: 2px;">Predicted Nutrient</div>
@@ -385,39 +338,84 @@ if uploaded_file is not None:
 </div>
 </div>
 """
-        st.markdown(html_content, unsafe_allow_html=True)
+                        st.markdown(html_content, unsafe_allow_html=True)
 
-        if demo_mode:
-            st.info(
-                "💡 This is a **simulated prediction**. To get real results, "
-                "retrain the model using the notebook in `notebooks/` and place "
-                "the `.h5` file in `models/`."
-            )
+                        if is_demo:
+                            st.info(
+                                "💡 This is a **simulated prediction**. To get real results, "
+                                "place the `.h5` file in `models/`."
+                            )
+                    else:
+                        st.error(f"Backend Error: {response.json().get('detail', 'Unknown Error')}")
+                        
+                except Exception as e:
+                    st.error(f"Failed to communicate with backend: {e}")
 
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# How It Works
-st.markdown("---")
-st.markdown("### How It Works")
-st.markdown("""
-<div class="feature-grid">
-    <div class="feature-item">
-        <div class="feature-icon">📤</div>
-        <div class="feature-title">1. Upload</div>
-        <div class="feature-desc">Take a photo or upload an image of any food item</div>
+    # How It Works
+    st.markdown("---")
+    st.markdown("### How It Works")
+    st.markdown("""
+    <div class="feature-grid">
+        <div class="feature-item">
+            <div class="feature-icon">📤</div>
+            <div class="feature-title">1. Upload</div>
+            <div class="feature-desc">Take a photo or upload an image of any food item</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-title">2. AI Analysis</div>
+            <div class="feature-desc">VGG19 neural network processes and classifies the image via FastAPI backend</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">3. Results</div>
+            <div class="feature-desc">Get the dominant vitamin, confidence score, and nutrition info</div>
+        </div>
     </div>
-    <div class="feature-item">
-        <div class="feature-icon">🧠</div>
-        <div class="feature-title">2. AI Analysis</div>
-        <div class="feature-desc">VGG19 neural network processes and classifies the image</div>
-    </div>
-    <div class="feature-item">
-        <div class="feature-icon">📊</div>
-        <div class="feature-title">3. Results</div>
-        <div class="feature-desc">Get the dominant vitamin, confidence score, and nutrition info</div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+
+with tab2:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 📚 Prediction History")
+    
+    if not backend_online:
+        st.warning("Cannot fetch history. Backend is offline.")
+    else:
+        with st.spinner("Fetching history..."):
+            history = fetch_history()
+            
+            if not history:
+                st.info("No prediction history found. Upload an image to make your first prediction!")
+            else:
+                for item in history:
+                    date_str = item.get("created_at", "")
+                    try:
+                        # Format ISO date to readable string
+                        if date_str:
+                            dt = datetime.datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                            date_str = dt.strftime("%b %d, %Y - %I:%M %p")
+                    except:
+                        pass
+
+                    st.markdown(f"""
+                    <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0; color: #a78bfa; font-family: 'Outfit', sans-serif;">{item.get('predicted_vitamin', 'Unknown')}</h4>
+                                <span style="font-size: 0.8rem; color: #94a1b2;">File: {item.get('filename', 'Unknown')}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #2cb67d; font-weight: bold; font-size: 1.1rem;">{item.get('confidence', 0):.1f}%</div>
+                                <div style="font-size: 0.75rem; color: #94a1b2;">{date_str}</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
